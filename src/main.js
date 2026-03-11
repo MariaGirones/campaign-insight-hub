@@ -4,8 +4,10 @@
  * Initialises all feature modules as they are built.
  */
 
-import { initUploader } from './uploader.js';
-import { normalizeData, normalizationSummary } from './normalizer.js';
+import { initUploader }                    from './uploader.js';
+import { normalizeData }                   from './normalizer.js';
+import { matchCreators }                   from './matcher.js';
+import { initMatcherUI }                   from './matcherUI.js';
 
 // Internal fields to show in the normalized preview (in order)
 const NORM_DISPLAY_FIELDS = [
@@ -15,41 +17,49 @@ const NORM_DISPLAY_FIELDS = [
 
 document.addEventListener('DOMContentLoaded', () => {
   initUploader();
+  initMatcherUI();
 
+  // ── csv uploaded ───────────────────────────────────────────
   document.addEventListener('csv:loaded', e => {
     const csvResult = e.detail;
-    console.log('[Campaign Hub] CSV loaded:', csvResult);
 
-    // ── Feature 2: normalize ──────────────────────────────────
+    // Feature 2 — normalize
     const { normalizedRows, headerMap, unmappedHeaders } = normalizeData(csvResult);
-    console.log('[Campaign Hub] Normalized:', normalizedRows);
-
     renderNormalizedPreview(normalizedRows, headerMap, unmappedHeaders);
 
-    // Future features receive normalized data via this event
     document.dispatchEvent(
       new CustomEvent('data:normalized', { detail: { normalizedRows } })
     );
+
+    // Feature 3 — match creators
+    const creators = matchCreators(normalizedRows);
+    console.log('[Campaign Hub] Creators matched:', creators);
+
+    document.dispatchEvent(
+      new CustomEvent('creators:matched', { detail: { creators } })
+    );
+  });
+
+  // ── clear pressed ──────────────────────────────────────────
+  document.addEventListener('ui:cleared', () => {
+    document.dispatchEvent(new CustomEvent('creators:cleared'));
   });
 });
 
 // ── Render normalized table ────────────────────────────────────
 function renderNormalizedPreview(rows, headerMap, unmappedHeaders) {
-  const container   = document.getElementById('normContainer');
-  const countEl     = document.getElementById('normCount');
-  const summaryEl   = document.getElementById('normSummary');
-  const table       = document.getElementById('normTable');
+  const container = document.getElementById('normContainer');
+  const countEl   = document.getElementById('normCount');
+  const summaryEl = document.getElementById('normSummary');
+  const table     = document.getElementById('normTable');
 
-  // Summary pills
   const mappedFields = [...new Set(Object.values(headerMap))];
   summaryEl.innerHTML = buildSummaryHTML(mappedFields, unmappedHeaders);
 
-  // Only show fields that actually have data
   const activeFields = NORM_DISPLAY_FIELDS.filter(f =>
     rows.some(r => r[f] !== '' && r[f] !== 0)
   );
 
-  // Header
   const thead = document.createElement('thead');
   const headRow = document.createElement('tr');
   activeFields.forEach(f => {
@@ -59,7 +69,6 @@ function renderNormalizedPreview(rows, headerMap, unmappedHeaders) {
   });
   thead.appendChild(headRow);
 
-  // Body
   const tbody = document.createElement('tbody');
   rows.forEach(row => {
     const tr = document.createElement('tr');

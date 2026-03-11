@@ -132,12 +132,15 @@ export function initUploader() {
     previewTable.innerHTML  = '';
     uploadArea.classList.remove('drag-over');
 
-    // Clear normalized data section (Feature 2)
+    // Clear downstream sections (Features 2, 3, …)
     const normContainer = document.getElementById('normContainer');
     const normTable     = document.getElementById('normTable');
     const normSummary   = document.getElementById('normSummary');
-    if (normContainer)  normContainer.hidden = true;
-    if (normTable)      normTable.innerHTML  = '';
+    if (normContainer)  normContainer.hidden  = true;
+    if (normTable)      normTable.innerHTML   = '';
     if (normSummary)    normSummary.innerHTML = '';
+
+    // Notify all other modules to reset
+    document.dispatchEvent(new CustomEvent('ui:cleared'));
   }
 }
