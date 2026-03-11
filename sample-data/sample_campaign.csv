@@ -1,0 +1,6 @@
+username,instagram_id,post_url,post_id,likes,comments,views,campaign,date
+@influencer_a,123456789,https://instagram.com/p/ABC111,ABC111,4200,310,95000,Summer2025,2025-06-01
+@influencer_b,987654321,https://instagram.com/p/ABC222,ABC222,8800,520,210000,Summer2025,2025-06-02
+@influencer_c,111222333,https://instagram.com/p/ABC333,ABC333,1500,90,32000,Summer2025,2025-06-03
+@influencer_d,444555666,https://instagram.com/p/ABC444,ABC444,6300,400,140000,Summer2025,2025-06-04
+@influencer_e,777888999,https://instagram.com/p/ABC555,ABC555,3100,180,78000,Summer2025,2025-06-05

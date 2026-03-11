@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campaign Insight Hub</title>
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <h1 class="logo">Campaign Insight Hub</h1>
+      <nav class="nav">
+        <a href="#upload" class="nav-link active">Upload</a>
+        <a href="#dashboard" class="nav-link">Dashboard</a>
+        <a href="#search" class="nav-link">Search</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- Feature 1: CSV Upload -->
+    <section id="upload" class="section">
+      <h2 class="section-title">Upload Analytics File</h2>
+      <p class="section-desc">Upload a CSV file exported from Instagram, TikTok, or any analytics tool.</p>
+
+      <div class="upload-area" id="uploadArea">
+        <div class="upload-icon">&#8679;</div>
+        <p class="upload-label">Drag &amp; drop a CSV file here, or click to browse</p>
+        <input type="file" id="fileInput" accept=".csv" hidden />
+        <button class="btn btn-primary" id="browseBtn">Browse File</button>
+      </div>
+
+      <div class="upload-status" id="uploadStatus" hidden>
+        <div class="status-card">
+          <p class="status-filename" id="statusFilename"></p>
+          <p class="status-info" id="statusInfo"></p>
+        </div>
+      </div>
+
+      <div class="preview-container" id="previewContainer" hidden>
+        <h3 class="preview-title">Preview <span id="previewCount"></span></h3>
+        <div class="table-wrapper">
+          <table class="data-table" id="previewTable"></table>
+        </div>
+        <button class="btn btn-secondary" id="clearBtn">Clear</button>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
