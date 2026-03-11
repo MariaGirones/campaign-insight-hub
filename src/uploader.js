@@ -126,10 +126,18 @@ export function initUploader() {
   }
 
   function resetUI() {
-    fileInput.value          = '';
-    uploadStatus.hidden      = true;
-    previewContainer.hidden  = true;
-    previewTable.innerHTML   = '';
+    fileInput.value         = '';
+    uploadStatus.hidden     = true;
+    previewContainer.hidden = true;
+    previewTable.innerHTML  = '';
     uploadArea.classList.remove('drag-over');
+
+    // Clear normalized data section (Feature 2)
+    const normContainer = document.getElementById('normContainer');
+    const normTable     = document.getElementById('normTable');
+    const normSummary   = document.getElementById('normSummary');
+    if (normContainer)  normContainer.hidden = true;
+    if (normTable)      normTable.innerHTML  = '';
+    if (normSummary)    normSummary.innerHTML = '';
   }
 }
