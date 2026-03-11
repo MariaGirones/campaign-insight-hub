@@ -25,6 +25,17 @@
       <h2 class="section-title">Upload Analytics File</h2>
       <p class="section-desc">Upload a CSV or PDF exported from Instagram, TikTok, or any analytics tool. Columns are detected automatically.</p>
 
+      <!-- Goals -->
+      <div class="goals-panel">
+        <label class="goals-label" for="goalsInput">What do you want to find out about this campaign?</label>
+        <textarea
+          id="goalsInput"
+          class="goals-textarea"
+          placeholder="e.g. Which creator had the best engagement rate? Who drove the most views? Was the overall performance above average?"
+          rows="3"
+        ></textarea>
+      </div>
+
       <div class="upload-area" id="uploadArea">
         <div class="upload-icon">&#8679;</div>
         <p class="upload-label">Drag &amp; drop a CSV or PDF file here, or click to browse</p>
@@ -45,6 +56,13 @@
           <table class="data-table" id="previewTable"></table>
         </div>
         <button class="btn btn-secondary" id="clearBtn">Clear</button>
+      </div>
+
+      <!-- AI / Rule-based Insights -->
+      <div class="insights-container" id="insightsContainer" hidden>
+        <h3 class="preview-title">Campaign Insights <span id="insightsSource"></span></h3>
+        <div class="insights-loading" id="insightsLoading" hidden>Analyzing…</div>
+        <div class="insights-content" id="insightsContent"></div>
       </div>
 
       <!-- Feature 2: Normalization result -->
@@ -82,6 +100,32 @@
       </div>
 
       <div id="searchResult" class="search-result" hidden></div>
+    </section>
+
+    <!-- Feature 6: Missing Data Detection -->
+    <section id="missingSection" class="section">
+      <h2 class="section-title">Missing Data Detection</h2>
+      <p class="section-desc">See which creators in each campaign have not submitted analytics yet.</p>
+
+      <!-- Auto reports from store -->
+      <div id="missingReports"></div>
+
+      <!-- Roster upload -->
+      <div class="roster-upload-panel">
+        <h3 class="roster-title">Check Against a Roster</h3>
+        <p class="section-desc">Upload a CSV with a list of expected creators to cross-reference against a specific campaign.</p>
+        <div class="roster-controls">
+          <select id="rosterCampaignSelect" class="roster-select">
+            <option value="">— Select campaign —</option>
+          </select>
+          <label class="btn btn-secondary roster-upload-btn">
+            Upload Roster CSV
+            <input type="file" id="rosterFileInput" accept=".csv" hidden />
+          </label>
+        </div>
+        <p id="rosterStatus" class="roster-status" hidden></p>
+        <div id="rosterResult" hidden></div>
+      </div>
     </section>
 
     <!-- Feature 4: Data Storage -->

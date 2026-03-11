@@ -9,7 +9,9 @@ import { normalizeData }  from './normalizer.js';
 import { matchCreators }  from './matcher.js';
 import { initMatcherUI }  from './matcherUI.js';
 import { initStoreUI }    from './storeUI.js';
-import { initSearchUI }   from './searchUI.js';
+import { initSearchUI }             from './searchUI.js';
+import { initMissingUI, refreshCampaignSelector } from './missingUI.js';
+import { analyzeGoals } from './goalAnalyzer.js';
 
 // Internal fields to show in the normalized preview (in order)
 const NORM_DISPLAY_FIELDS = [
@@ -22,14 +24,23 @@ document.addEventListener('DOMContentLoaded', () => {
   initMatcherUI();
   initStoreUI();    // Feature 4
   initSearchUI();   // Feature 5
+  initMissingUI();  // Feature 6
+
+  // Keep roster campaign selector in sync when new data arrives
+  document.addEventListener('creators:matched', () => refreshCampaignSelector());
 
   // ── csv uploaded ───────────────────────────────────────────
   document.addEventListener('csv:loaded', e => {
-    const csvResult = e.detail;
+    const csvResult     = e.detail;
+    const campaignName  = csvResult.campaignName || '';
 
-    // Feature 2 — normalize
-    const { normalizedRows, headerMap, detectedNumericFields, detectedTextFields } = normalizeData(csvResult);
+    // Feature 2 — normalize (campaign name always comes from filename)
+    const { normalizedRows, headerMap, detectedNumericFields, detectedTextFields } = normalizeData(csvResult, campaignName);
     renderNormalizedPreview(normalizedRows, headerMap, detectedNumericFields, detectedTextFields);
+
+    // Goals analysis — free, rule-based, runs immediately
+    const goals = document.getElementById('goalsInput')?.value?.trim() ?? '';
+    renderInsights(campaignName, normalizedRows, goals);
 
     document.dispatchEvent(
       new CustomEvent('data:normalized', { detail: { normalizedRows } })
@@ -47,9 +58,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── clear pressed ──────────────────────────────────────────
   document.addEventListener('ui:cleared', () => {
+    const insightsContainer = document.getElementById('insightsContainer');
+    if (insightsContainer) insightsContainer.hidden = true;
     document.dispatchEvent(new CustomEvent('creators:cleared'));
   });
 });
+
+// ── Insights renderer ──────────────────────────────────────────
+
+function renderInsights(campaignName, normalizedRows, goals) {
+  const container = document.getElementById('insightsContainer');
+  const loading   = document.getElementById('insightsLoading');
+  const content   = document.getElementById('insightsContent');
+  const sourceEl  = document.getElementById('insightsSource');
+
+  if (!container) return;
+
+  const { text } = analyzeGoals(campaignName, normalizedRows, goals);
+  loading.hidden       = true;
+  sourceEl.textContent = '';
+  content.innerHTML    = markdownToHTML(text);
+  container.hidden     = false;
+}
+
+/** Minimal markdown renderer: bold, bullet lists, line breaks */
+function markdownToHTML(md) {
+  return md
+    .split('\n')
+    .map(line => {
+      line = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      line = line.replace(/\*(.+?)\*/g, '<em>$1</em>');
+      if (/^[-•]\s/.test(line)) return `<li>${line.slice(2)}</li>`;
+      if (line.trim() === '')   return '<br>';
+      return `<p>${line}</p>`;
+    })
+    .join('')
+    .replace(/(<li>.*<\/li>)+/g, match => `<ul>${match}</ul>`);
+}
 
 // ── Render normalized table ────────────────────────────────────
 function renderNormalizedPreview(rows, headerMap, detectedNumericFields = [], detectedTextFields = []) {

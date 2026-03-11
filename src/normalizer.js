@@ -187,6 +187,8 @@ function detectNumericColumns(unmappedHeaders, rows) {
  * Unknown text columns are kept as strings.
  *
  * @param {{ headers: string[], rows: Object[] }} csvResult
+ * @param {string} [campaignName]  — if provided, overrides the campaign field
+ *   in every row (campaign name is always the uploaded filename).
  * @returns {{
  *   normalizedRows: Object[],
  *   headerMap: Object,
@@ -194,7 +196,7 @@ function detectNumericColumns(unmappedHeaders, rows) {
  *   detectedTextFields: string[]
  * }}
  */
-export function normalizeData(csvResult) {
+export function normalizeData(csvResult, campaignName) {
   const { headers, rows } = csvResult;
   const headerMap = buildHeaderMap(headers);
 
@@ -205,6 +207,9 @@ export function normalizeData(csvResult) {
 
   const normalizedRows = rows.map(row => {
     const base = normalizeRow(row, headerMap);
+
+    // Campaign name is always the filename — override whatever was in the CSV
+    if (campaignName) base.campaign = campaignName;
 
     // Attach every extra column so nothing is lost
     for (const col of detectedNumericFields) {

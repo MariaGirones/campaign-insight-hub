@@ -10,6 +10,15 @@ import { parsePDF }                 from './pdfParser.js';
 
 const ACCEPTED_EXTS = ['.csv', '.pdf'];
 
+/** Strip extension and clean up filename to use as campaign name */
+function filenameToCampaign(filename) {
+  return filename
+    .replace(/\.[^.]+$/, '')          // remove extension
+    .replace(/[_\-]+/g, ' ')          // underscores/dashes → spaces
+    .replace(/\s+/g, ' ')             // collapse whitespace
+    .trim();
+}
+
 function isAccepted(file) {
   const name = file.name.toLowerCase();
   return ACCEPTED_EXTS.some(ext => name.endsWith(ext));
@@ -89,8 +98,9 @@ export function initUploader() {
 
       renderPreview(result.headers, result.rows);
 
+      const campaignName = filenameToCampaign(file.name);
       document.dispatchEvent(
-        new CustomEvent('csv:loaded', { detail: result })
+        new CustomEvent('csv:loaded', { detail: { ...result, campaignName } })
       );
     } catch (err) {
       showStatus(file.name, err.message, true);
@@ -140,12 +150,14 @@ export function initUploader() {
     previewTable.innerHTML  = '';
     uploadArea.classList.remove('drag-over');
 
-    const normContainer = document.getElementById('normContainer');
-    const normTable     = document.getElementById('normTable');
-    const normSummary   = document.getElementById('normSummary');
-    if (normContainer) normContainer.hidden  = true;
-    if (normTable)     normTable.innerHTML   = '';
-    if (normSummary)   normSummary.innerHTML = '';
+    const normContainer     = document.getElementById('normContainer');
+    const normTable         = document.getElementById('normTable');
+    const normSummary       = document.getElementById('normSummary');
+    const insightsContainer = document.getElementById('insightsContainer');
+    if (normContainer)     normContainer.hidden     = true;
+    if (normTable)         normTable.innerHTML      = '';
+    if (normSummary)       normSummary.innerHTML    = '';
+    if (insightsContainer) insightsContainer.hidden = true;
 
     document.dispatchEvent(new CustomEvent('ui:cleared'));
   }
