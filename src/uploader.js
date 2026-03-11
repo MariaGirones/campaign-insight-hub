@@ -1,25 +1,36 @@
 /**
  * uploader.js
- * Handles all UI interactions for the CSV upload section.
- * Emits a custom event 'csv:loaded' on the document when parsing succeeds.
+ * Handles all UI interactions for the file upload section.
+ * Accepts CSV and PDF files. Emits 'csv:loaded' on the document
+ * when parsing succeeds (same payload shape regardless of file type).
  */
 
 import { parseCSV, readFileAsText } from './csvParser.js';
+import { parsePDF }                 from './pdfParser.js';
 
-const ALLOWED_TYPE = 'text/csv';
-const ALLOWED_EXT      = '.csv';
+const ACCEPTED_EXTS = ['.csv', '.pdf'];
+
+function isAccepted(file) {
+  const name = file.name.toLowerCase();
+  return ACCEPTED_EXTS.some(ext => name.endsWith(ext));
+}
+
+function fileType(file) {
+  if (file.name.toLowerCase().endsWith('.pdf')) return 'pdf';
+  return 'csv';
+}
 
 export function initUploader() {
-  const uploadArea      = document.getElementById('uploadArea');
-  const fileInput       = document.getElementById('fileInput');
-  const browseBtn       = document.getElementById('browseBtn');
-  const uploadStatus    = document.getElementById('uploadStatus');
-  const statusFilename  = document.getElementById('statusFilename');
-  const statusInfo      = document.getElementById('statusInfo');
+  const uploadArea       = document.getElementById('uploadArea');
+  const fileInput        = document.getElementById('fileInput');
+  const browseBtn        = document.getElementById('browseBtn');
+  const uploadStatus     = document.getElementById('uploadStatus');
+  const statusFilename   = document.getElementById('statusFilename');
+  const statusInfo       = document.getElementById('statusInfo');
   const previewContainer = document.getElementById('previewContainer');
-  const previewCount    = document.getElementById('previewCount');
-  const previewTable    = document.getElementById('previewTable');
-  const clearBtn        = document.getElementById('clearBtn');
+  const previewCount     = document.getElementById('previewCount');
+  const previewTable     = document.getElementById('previewTable');
+  const clearBtn         = document.getElementById('clearBtn');
 
   // ── Open file picker ───────────────────────────────────────
   browseBtn.addEventListener('click', () => fileInput.click());
@@ -52,21 +63,24 @@ export function initUploader() {
 
   // ── Core handler ──────────────────────────────────────────
   async function handleFile(file) {
-    // Validate extension (MIME type can be unreliable on Windows)
-    const isCSV =
-      file.type === ALLOWED_TYPE ||
-      file.name.toLowerCase().endsWith(ALLOWED_EXT);
-
-    if (!isCSV) {
-      showStatus(file.name, 'Only CSV files are supported.', true);
+    if (!isAccepted(file)) {
+      showStatus(file.name, 'Only CSV and PDF files are supported.', true);
       return;
     }
 
-    showStatus(file.name, 'Reading file…');
+    const type = fileType(file);
+    showStatus(file.name, `Reading ${type.toUpperCase()} file…`);
 
     try {
-      const text   = await readFileAsText(file);
-      const result = parseCSV(text);
+      let result;
+
+      if (type === 'pdf') {
+        showStatus(file.name, 'Loading PDF parser…');
+        result = await parsePDF(file);
+      } else {
+        const text = await readFileAsText(file);
+        result = parseCSV(text);
+      }
 
       showStatus(
         file.name,
@@ -75,7 +89,6 @@ export function initUploader() {
 
       renderPreview(result.headers, result.rows);
 
-      // Notify the rest of the app
       document.dispatchEvent(
         new CustomEvent('csv:loaded', { detail: result })
       );
@@ -89,14 +102,11 @@ export function initUploader() {
     statusFilename.textContent = filename;
     statusInfo.textContent     = info;
     uploadStatus.hidden        = false;
-
-    const card = uploadStatus.querySelector('.status-card');
-    card.classList.toggle('error', isError);
+    uploadStatus.querySelector('.status-card').classList.toggle('error', isError);
   }
 
   function renderPreview(headers, rows) {
-    // Header row
-    const thead = document.createElement('thead');
+    const thead   = document.createElement('thead');
     const headRow = document.createElement('tr');
     headers.forEach(h => {
       const th = document.createElement('th');
@@ -105,7 +115,6 @@ export function initUploader() {
     });
     thead.appendChild(headRow);
 
-    // Body rows (all rows — table wrapper scrolls)
     const tbody = document.createElement('tbody');
     rows.forEach(row => {
       const tr = document.createElement('tr');
@@ -120,8 +129,7 @@ export function initUploader() {
     previewTable.innerHTML = '';
     previewTable.appendChild(thead);
     previewTable.appendChild(tbody);
-
-    previewCount.textContent = `(${rows.length} rows)`;
+    previewCount.textContent = `(${rows.length} rows · ${headers.length} columns)`;
     previewContainer.hidden = false;
   }
 
@@ -132,15 +140,13 @@ export function initUploader() {
     previewTable.innerHTML  = '';
     uploadArea.classList.remove('drag-over');
 
-    // Clear downstream sections (Features 2, 3, …)
     const normContainer = document.getElementById('normContainer');
     const normTable     = document.getElementById('normTable');
     const normSummary   = document.getElementById('normSummary');
-    if (normContainer)  normContainer.hidden  = true;
-    if (normTable)      normTable.innerHTML   = '';
-    if (normSummary)    normSummary.innerHTML = '';
+    if (normContainer) normContainer.hidden  = true;
+    if (normTable)     normTable.innerHTML   = '';
+    if (normSummary)   normSummary.innerHTML = '';
 
-    // Notify all other modules to reset
     document.dispatchEvent(new CustomEvent('ui:cleared'));
   }
 }

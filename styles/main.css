@@ -229,8 +229,9 @@ body {
   padding: 3px 10px;
   border-radius: 20px;
 }
-.pill-ok   { background: rgba(76,175,131,.15); color: var(--success); border: 1px solid rgba(76,175,131,.3); }
-.pill-warn { background: rgba(224, 92,108,.15); color: var(--error);   border: 1px solid rgba(224,92,108,.3); }
+.pill-ok       { background: rgba(76,175,131,.15);  color: var(--success); border: 1px solid rgba(76,175,131,.3); }
+.pill-warn     { background: rgba(224, 92,108,.15); color: var(--error);   border: 1px solid rgba(224,92,108,.3); }
+.pill-detected { background: rgba(108,99,255,.15);  color: var(--accent);  border: 1px solid rgba(108,99,255,.3); }
 
 /* ── Feature 3: Creator Cards ────────────────────────────────── */
 .creator-grid {
@@ -367,3 +368,101 @@ body {
   color: var(--text-muted);
 }
 .post-date { margin-left: auto; }
+
+/* ── Feature 4: Data Storage ─────────────────────────────────── */
+.store-stats {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.store-stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 110px;
+}
+.store-stat-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+.store-stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.store-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+.store-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+.btn-danger {
+  background: rgba(224,92,108,.15);
+  color: var(--error);
+  border: 1px solid rgba(224,92,108,.35);
+}
+.btn-danger:hover { background: rgba(224,92,108,.28); }
+.btn-danger-confirm {
+  background: var(--error);
+  color: #fff;
+  border-color: var(--error);
+  animation: pulse-danger 0.6s ease infinite alternate;
+}
+@keyframes pulse-danger {
+  from { opacity: 1; }
+  to   { opacity: 0.75; }
+}
+
+/* Campaign list */
+.campaign-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.campaign-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.campaign-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.campaign-name {
+  font-weight: 700;
+  font-size: 15px;
+}
+.campaign-badge {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.campaign-creators {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}

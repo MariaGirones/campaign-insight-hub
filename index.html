@@ -23,12 +23,12 @@
     <!-- Feature 1: CSV Upload -->
     <section id="upload" class="section">
       <h2 class="section-title">Upload Analytics File</h2>
-      <p class="section-desc">Upload a CSV file exported from Instagram, TikTok, or any analytics tool.</p>
+      <p class="section-desc">Upload a CSV or PDF exported from Instagram, TikTok, or any analytics tool. Columns are detected automatically.</p>
 
       <div class="upload-area" id="uploadArea">
         <div class="upload-icon">&#8679;</div>
-        <p class="upload-label">Drag &amp; drop a CSV file here, or click to browse</p>
-        <input type="file" id="fileInput" accept=".csv" hidden />
+        <p class="upload-label">Drag &amp; drop a CSV or PDF file here, or click to browse</p>
+        <input type="file" id="fileInput" accept=".csv,.pdf" hidden />
         <button class="btn btn-primary" id="browseBtn">Browse File</button>
       </div>
 
@@ -62,6 +62,40 @@
       <h2 class="section-title">Matched Creators</h2>
       <p class="section-desc" id="matchCount"></p>
       <div class="creator-grid" id="creatorGrid"></div>
+    </section>
+
+    <!-- Feature 4: Data Storage -->
+    <section id="storeSection" class="section">
+      <h2 class="section-title">Stored Data</h2>
+      <p class="section-desc">Data is saved in your browser and persists across sessions.</p>
+
+      <div class="store-stats" id="storeStats">
+        <div class="store-stat">
+          <span class="store-stat-value" id="statCreators">0</span>
+          <span class="store-stat-label">Creators</span>
+        </div>
+        <div class="store-stat">
+          <span class="store-stat-value" id="statPosts">0</span>
+          <span class="store-stat-label">Posts</span>
+        </div>
+        <div class="store-stat">
+          <span class="store-stat-value" id="statCampaigns">0</span>
+          <span class="store-stat-label">Campaigns</span>
+        </div>
+        <div class="store-stat">
+          <span class="store-stat-value" id="statUploads">0</span>
+          <span class="store-stat-label">Uploads</span>
+        </div>
+      </div>
+
+      <p class="store-meta" id="storeMeta"></p>
+
+      <div class="store-actions">
+        <button class="btn btn-danger" id="clearStoreBtn">Clear All Stored Data</button>
+      </div>
+
+      <!-- Stored campaigns list -->
+      <div id="campaignList" class="campaign-list"></div>
     </section>
 
   </main>

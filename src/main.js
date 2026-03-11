@@ -4,10 +4,11 @@
  * Initialises all feature modules as they are built.
  */
 
-import { initUploader }                    from './uploader.js';
-import { normalizeData }                   from './normalizer.js';
-import { matchCreators }                   from './matcher.js';
-import { initMatcherUI }                   from './matcherUI.js';
+import { initUploader }   from './uploader.js';
+import { normalizeData }  from './normalizer.js';
+import { matchCreators }  from './matcher.js';
+import { initMatcherUI }  from './matcherUI.js';
+import { initStoreUI }    from './storeUI.js';
 
 // Internal fields to show in the normalized preview (in order)
 const NORM_DISPLAY_FIELDS = [
@@ -18,14 +19,15 @@ const NORM_DISPLAY_FIELDS = [
 document.addEventListener('DOMContentLoaded', () => {
   initUploader();
   initMatcherUI();
+  initStoreUI();      // Feature 4
 
   // ── csv uploaded ───────────────────────────────────────────
   document.addEventListener('csv:loaded', e => {
     const csvResult = e.detail;
 
     // Feature 2 — normalize
-    const { normalizedRows, headerMap, unmappedHeaders } = normalizeData(csvResult);
-    renderNormalizedPreview(normalizedRows, headerMap, unmappedHeaders);
+    const { normalizedRows, headerMap, detectedNumericFields, detectedTextFields } = normalizeData(csvResult);
+    renderNormalizedPreview(normalizedRows, headerMap, detectedNumericFields, detectedTextFields);
 
     document.dispatchEvent(
       new CustomEvent('data:normalized', { detail: { normalizedRows } })
@@ -38,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.dispatchEvent(
       new CustomEvent('creators:matched', { detail: { creators } })
     );
+    // Feature 4 — storeUI listens to creators:matched and auto-saves
   });
 
   // ── clear pressed ──────────────────────────────────────────
@@ -47,18 +50,20 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── Render normalized table ────────────────────────────────────
-function renderNormalizedPreview(rows, headerMap, unmappedHeaders) {
+function renderNormalizedPreview(rows, headerMap, detectedNumericFields = [], detectedTextFields = []) {
   const container = document.getElementById('normContainer');
   const countEl   = document.getElementById('normCount');
   const summaryEl = document.getElementById('normSummary');
   const table     = document.getElementById('normTable');
 
-  const mappedFields = [...new Set(Object.values(headerMap))];
-  summaryEl.innerHTML = buildSummaryHTML(mappedFields, unmappedHeaders);
+  const mappedInternalFields = [...new Set(Object.values(headerMap))];
+  summaryEl.innerHTML = buildSummaryHTML(mappedInternalFields, detectedNumericFields, detectedTextFields);
 
-  const activeFields = NORM_DISPLAY_FIELDS.filter(f =>
+  // Show: known schema fields that have data + every extra column (numeric + text)
+  const knownActive = NORM_DISPLAY_FIELDS.filter(f =>
     rows.some(r => r[f] !== '' && r[f] !== 0)
   );
+  const activeFields = [...knownActive, ...detectedNumericFields, ...detectedTextFields];
 
   const thead = document.createElement('thead');
   const headRow = document.createElement('tr');
@@ -86,23 +91,28 @@ function renderNormalizedPreview(rows, headerMap, unmappedHeaders) {
   table.appendChild(thead);
   table.appendChild(tbody);
 
-  countEl.textContent = `(${rows.length} rows)`;
+  countEl.textContent = `(${rows.length} rows · ${activeFields.length} columns)`;
   container.hidden = false;
 }
 
-function buildSummaryHTML(mapped, unmapped) {
-  const pills = mapped.map(f =>
+function buildSummaryHTML(mapped, numericExtra, textExtra) {
+  const mappedPills = mapped.map(f =>
     `<span class="pill pill-ok">${f}</span>`
   ).join('');
 
-  const missing = unmapped.map(f =>
+  const numPills = numericExtra.map(f =>
+    `<span class="pill pill-detected">${f}</span>`
+  ).join('');
+
+  const txtPills = textExtra.map(f =>
     `<span class="pill pill-warn">${f}</span>`
   ).join('');
 
   return `
     <div class="summary-group">
-      <span class="summary-label">Mapped:</span> ${pills}
+      <span class="summary-label">Recognised:</span> ${mappedPills}
     </div>
-    ${unmapped.length ? `<div class="summary-group"><span class="summary-label">Unmapped:</span> ${missing}</div>` : ''}
+    ${numericExtra.length ? `<div class="summary-group"><span class="summary-label">Extra numbers:</span> ${numPills}</div>` : ''}
+    ${textExtra.length    ? `<div class="summary-group"><span class="summary-label">Extra text:</span> ${txtPills}</div>`    : ''}
   `;
 }

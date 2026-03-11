@@ -154,20 +154,70 @@ function normalizeRow(raw, headerMap) {
 }
 
 /**
+ * Detect which unmapped headers contain numeric data by sampling rows.
+ * Returns an array of column names that are numeric.
+ * @param {string[]} unmappedHeaders
+ * @param {Object[]} rows
+ * @returns {string[]}
+ */
+// Non-values that should not count as "filled" when detecting column types
+const EMPTY_VALUES = new Set(['', 'n/a', 'na', 'null', 'undefined', '-', '--']);
+
+function isFilledValue(v) {
+  return !EMPTY_VALUES.has(String(v).toLowerCase().trim());
+}
+
+function detectNumericColumns(unmappedHeaders, rows) {
+  const sample = rows.slice(0, 20);
+  return unmappedHeaders.filter(header => {
+    const values = sample
+      .map(r => String(r[header] ?? '').replace(/[,%\s]/g, ''))
+      .filter(isFilledValue);
+    if (!values.length) return false;
+    const numericCount = values.filter(v => !isNaN(parseFloat(v))).length;
+    return numericCount / values.length >= 0.75;
+  });
+}
+
+/**
  * Normalize an entire CSV parse result.
+ * All columns from the file are preserved in each normalized row.
+ * Known columns are mapped to internal schema fields.
+ * Unknown numeric columns are converted to numbers.
+ * Unknown text columns are kept as strings.
+ *
  * @param {{ headers: string[], rows: Object[] }} csvResult
- * @returns {{ normalizedRows: Object[], headerMap: Object, unmappedHeaders: string[] }}
+ * @returns {{
+ *   normalizedRows: Object[],
+ *   headerMap: Object,
+ *   detectedNumericFields: string[],
+ *   detectedTextFields: string[]
+ * }}
  */
 export function normalizeData(csvResult) {
   const { headers, rows } = csvResult;
   const headerMap = buildHeaderMap(headers);
 
-  const mappedFields   = new Set(Object.keys(headerMap));
-  const unmappedHeaders = headers.filter(h => !mappedFields.has(h));
+  const mappedCsvHeaders    = new Set(Object.keys(headerMap));
+  const unmappedHeaders     = headers.filter(h => !mappedCsvHeaders.has(h));
+  const detectedNumericFields = detectNumericColumns(unmappedHeaders, rows);
+  const detectedTextFields    = unmappedHeaders.filter(h => !detectedNumericFields.includes(h));
 
-  const normalizedRows = rows.map(row => normalizeRow(row, headerMap));
+  const normalizedRows = rows.map(row => {
+    const base = normalizeRow(row, headerMap);
 
-  return { normalizedRows, headerMap, unmappedHeaders };
+    // Attach every extra column so nothing is lost
+    for (const col of detectedNumericFields) {
+      base[col] = toNumber(row[col]);
+    }
+    for (const col of detectedTextFields) {
+      base[col] = String(row[col] ?? '').trim();
+    }
+
+    return base;
+  });
+
+  return { normalizedRows, headerMap, detectedNumericFields, detectedTextFields };
 }
 
 /**
