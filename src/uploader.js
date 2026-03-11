@@ -6,8 +6,7 @@
 
 import { parseCSV, readFileAsText } from './csvParser.js';
 
-const MAX_PREVIEW_ROWS = 10;
-const ALLOWED_TYPE     = 'text/csv';
+const ALLOWED_TYPE = 'text/csv';
 const ALLOWED_EXT      = '.csv';
 
 export function initUploader() {
@@ -96,8 +95,6 @@ export function initUploader() {
   }
 
   function renderPreview(headers, rows) {
-    const preview = rows.slice(0, MAX_PREVIEW_ROWS);
-
     // Header row
     const thead = document.createElement('thead');
     const headRow = document.createElement('tr');
@@ -108,9 +105,9 @@ export function initUploader() {
     });
     thead.appendChild(headRow);
 
-    // Body rows
+    // Body rows (all rows — table wrapper scrolls)
     const tbody = document.createElement('tbody');
-    preview.forEach(row => {
+    rows.forEach(row => {
       const tr = document.createElement('tr');
       headers.forEach(h => {
         const td = document.createElement('td');
@@ -124,9 +121,7 @@ export function initUploader() {
     previewTable.appendChild(thead);
     previewTable.appendChild(tbody);
 
-    previewCount.textContent =
-      `(first ${preview.length} of ${rows.length} rows)`;
-
+    previewCount.textContent = `(${rows.length} rows)`;
     previewContainer.hidden = false;
   }
 

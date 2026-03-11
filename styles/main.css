@@ -154,8 +154,16 @@ body {
 .preview-title span { color: var(--text); }
 .table-wrapper {
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 320px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
+}
+/* Sticky header while scrolling vertically */
+.data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 .data-table {
   width: 100%;
@@ -186,3 +194,40 @@ body {
 /* ── Error state ─────────────────────────────────────────────── */
 .status-card.error { border-color: var(--error); }
 .status-card.error .status-filename { color: var(--error); }
+
+/* ── Normalization section ───────────────────────────────────── */
+.norm-container { margin-top: 36px; }
+
+.norm-summary {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.summary-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.summary-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+.pill {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+.pill-ok   { background: rgba(76,175,131,.15); color: var(--success); border: 1px solid rgba(76,175,131,.3); }
+.pill-warn { background: rgba(224, 92,108,.15); color: var(--error);   border: 1px solid rgba(224,92,108,.3); }
