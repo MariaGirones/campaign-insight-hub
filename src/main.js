@@ -9,6 +9,7 @@ import { normalizeData }  from './normalizer.js';
 import { matchCreators }  from './matcher.js';
 import { initMatcherUI }  from './matcherUI.js';
 import { initStoreUI }    from './storeUI.js';
+import { initSearchUI }   from './searchUI.js';
 
 // Internal fields to show in the normalized preview (in order)
 const NORM_DISPLAY_FIELDS = [
@@ -19,7 +20,8 @@ const NORM_DISPLAY_FIELDS = [
 document.addEventListener('DOMContentLoaded', () => {
   initUploader();
   initMatcherUI();
-  initStoreUI();      // Feature 4
+  initStoreUI();    // Feature 4
+  initSearchUI();   // Feature 5
 
   // ── csv uploaded ───────────────────────────────────────────
   document.addEventListener('csv:loaded', e => {

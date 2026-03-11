@@ -64,6 +64,26 @@
       <div class="creator-grid" id="creatorGrid"></div>
     </section>
 
+    <!-- Feature 5: Creator Search -->
+    <section id="search" class="section">
+      <h2 class="section-title">Search</h2>
+      <p class="section-desc">Search by Instagram username, post URL, post ID, or campaign name.</p>
+
+      <div class="search-bar">
+        <input
+          id="searchInput"
+          class="search-input"
+          type="text"
+          placeholder="@username · instagram.com/p/ABC · post_id · Campaign name"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button class="btn btn-secondary search-clear" id="searchClearBtn">&#x2715;</button>
+      </div>
+
+      <div id="searchResult" class="search-result" hidden></div>
+    </section>
+
     <!-- Feature 4: Data Storage -->
     <section id="storeSection" class="section">
       <h2 class="section-title">Stored Data</h2>

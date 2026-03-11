@@ -369,6 +369,166 @@ body {
 }
 .post-date { margin-left: auto; }
 
+/* ── Feature 5: Search ───────────────────────────────────────── */
+.search-bar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.search-input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 15px;
+  padding: 11px 16px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.search-input::placeholder { color: var(--text-muted); }
+.search-input:focus { border-color: var(--accent); }
+.search-clear {
+  padding: 10px 14px;
+  font-size: 16px;
+  line-height: 1;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+/* Search result container */
+.search-result { margin-top: 4px; }
+
+/* Shared search card */
+.search-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.search-card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.search-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.search-avatar-post     { background: #3a7bd5; font-size: 16px; }
+.search-avatar-campaign { background: #e6a817; font-size: 16px; }
+.search-avatar-sm {
+  width: 28px; height: 28px;
+  font-size: 13px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.search-card-title {
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.search-card-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.search-type-badge {
+  margin-left: auto;
+  background: rgba(108,99,255,.15);
+  color: var(--accent);
+  border: 1px solid rgba(108,99,255,.3);
+  border-radius: 20px;
+  padding: 3px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.search-type-post     { background: rgba(58,123,213,.15); color: #5b9cf6; border-color: rgba(58,123,213,.3); }
+.search-type-campaign { background: rgba(230,168,23,.15);  color: #e6a817; border-color: rgba(230,168,23,.3); }
+
+.search-campaigns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.search-metrics {
+  display: flex;
+  gap: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  flex-wrap: wrap;
+}
+.search-metrics .metric {
+  flex: 1;
+  min-width: 70px;
+  border-right: 1px solid var(--border);
+}
+.search-metrics .metric:last-child { border-right: none; }
+
+/* Posts table inside search card */
+.search-posts-wrap { margin-top: 4px; }
+.search-posts-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+/* Multiple results */
+.search-multi-title {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.multi-list { display: flex; flex-direction: column; gap: 8px; }
+.multi-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+}
+.multi-username { font-weight: 600; font-size: 14px; flex: 1; }
+.multi-meta { font-size: 12px; color: var(--text-muted); }
+
+/* Not found */
+.search-card-empty { border-color: var(--surface2); }
+.search-not-found {
+  font-size: 15px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 8px 0 4px;
+}
+.search-not-found-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  opacity: 0.6;
+}
+
 /* ── Feature 4: Data Storage ─────────────────────────────────── */
 .store-stats {
   display: flex;
