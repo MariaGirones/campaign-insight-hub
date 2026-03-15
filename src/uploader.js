@@ -5,7 +5,6 @@ export function initUploader() {
   const dropZone  = document.getElementById('drop-zone');
   const fileInput = document.getElementById('file-input');
   const statusEl  = document.getElementById('upload-status');
-  const resetBtn  = document.getElementById('reset-btn');
 
   dropZone.addEventListener('click',    () => fileInput.click());
   dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
@@ -19,8 +18,6 @@ export function initUploader() {
   fileInput.addEventListener('change', () => {
     if (fileInput.files[0]) handleFile(fileInput.files[0]);
   });
-
-  resetBtn.addEventListener('click', reset);
 
   async function handleFile(file) {
     const ext = file.name.split('.').pop().toLowerCase();
@@ -79,14 +76,21 @@ export function initUploader() {
   }
 
   function showStatus(msg, type) {
-    statusEl.textContent = msg;
-    statusEl.className   = 'upload-status ' + type;
+    statusEl.className = 'upload-status ' + type;
+    if (type === 'ok') {
+      statusEl.innerHTML = `
+        <span class="status-msg">${msg}</span>
+        <button class="status-clear-btn" aria-label="Clear all">Clear all</button>`;
+      statusEl.querySelector('.status-clear-btn').addEventListener('click', reset);
+    } else {
+      statusEl.textContent = msg;
+    }
   }
 
   function reset() {
     fileInput.value      = '';
     statusEl.className   = 'upload-status hidden';
-    statusEl.textContent = '';
+    statusEl.innerHTML   = '';
     document.getElementById('columns-section').classList.add('hidden');
     document.getElementById('results-section').classList.add('hidden');
   }

@@ -184,6 +184,10 @@ body {
   border-radius: var(--r-sm);
   font-size: 13px;
   border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 .upload-status.ok {
   background: var(--green-dim);
@@ -200,6 +204,20 @@ body {
   border-color: var(--border);
   color: var(--text-muted);
 }
+.status-msg { flex: 1; }
+.status-clear-btn {
+  padding: 4px 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--green-border);
+  background: transparent;
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.status-clear-btn:hover { background: var(--green-dim); }
 
 /* ── Column chips ────────────────────────────────────────── */
 .column-list {
