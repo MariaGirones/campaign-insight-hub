@@ -1,29 +1,23 @@
-import { parseCSV, readFileAsText } from './csvParser.js';
-import { parsePDF }                 from './pdfParser.js';
-import { initColumns }              from './duplicateFinder.js';
+import { parsePDF }    from './pdfParser.js';
+import { initColumns } from './duplicateFinder.js';
 
 export function initUploader() {
-  const dropZone   = document.getElementById('drop-zone');
-  const fileInput  = document.getElementById('file-input');
-  const statusEl   = document.getElementById('upload-status');
-  const resetBtn   = document.getElementById('reset-btn');
+  const dropZone  = document.getElementById('drop-zone');
+  const fileInput = document.getElementById('file-input');
+  const statusEl  = document.getElementById('upload-status');
+  const resetBtn  = document.getElementById('reset-btn');
 
-  // Click anywhere on drop zone to open file picker
-  dropZone.addEventListener('click', () => fileInput.click());
-
-  fileInput.addEventListener('change', () => {
-    if (fileInput.files[0]) handleFile(fileInput.files[0]);
-  });
-
-  dropZone.addEventListener('dragover', e => {
-    e.preventDefault();
-    dropZone.classList.add('drag-over');
-  });
-  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('click',    () => fileInput.click());
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave',() => dropZone.classList.remove('drag-over'));
   dropZone.addEventListener('drop', e => {
     e.preventDefault();
     dropZone.classList.remove('drag-over');
     if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) handleFile(fileInput.files[0]);
   });
 
   resetBtn.addEventListener('click', reset);
@@ -39,11 +33,11 @@ export function initUploader() {
 
     try {
       let result;
+
       if (ext === 'pdf') {
         result = await parsePDF(file);
       } else {
-        const text = await readFileAsText(file);
-        result = parseCSV(text);
+        result = await parseCSVInWorker(file);
       }
 
       if (!result.headers.length || !result.rows.length) {
@@ -62,14 +56,36 @@ export function initUploader() {
     }
   }
 
+  /** Offload CSV parsing to a Web Worker so the UI never freezes */
+  function parseCSVInWorker(file) {
+    return new Promise((resolve, reject) => {
+      const worker = new Worker(
+        new URL('./worker.js', import.meta.url)
+      );
+
+      worker.onmessage = e => {
+        worker.terminate();
+        if (e.data.ok) resolve(e.data);
+        else           reject(new Error(e.data.error));
+      };
+
+      worker.onerror = e => {
+        worker.terminate();
+        reject(new Error(e.message || 'Worker error'));
+      };
+
+      worker.postMessage({ file });
+    });
+  }
+
   function showStatus(msg, type) {
     statusEl.textContent = msg;
     statusEl.className   = 'upload-status ' + type;
   }
 
   function reset() {
-    fileInput.value    = '';
-    statusEl.className = 'upload-status hidden';
+    fileInput.value      = '';
+    statusEl.className   = 'upload-status hidden';
     statusEl.textContent = '';
     document.getElementById('columns-section').classList.add('hidden');
     document.getElementById('results-section').classList.add('hidden');

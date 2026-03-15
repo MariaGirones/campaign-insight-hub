@@ -22,10 +22,11 @@ export function initColumns(headers, rows) {
 function detectType(header, rows) {
   const h = header.toLowerCase().replace(/[\s_\-]/g, '');
 
-  if (/email|e-?mail/.test(h))                           return 'email';
-  if (/instagram|^ig$|ighandle|igusername/.test(h))      return 'instagram';
-  if (/tiktok|^tt$|tthandle|ttusername/.test(h))         return 'tiktok';
-  if (/username|handle|^user$|account|creator/.test(h))  return 'username';
+  if (/name|nombre|creator|influencer/.test(h))           return 'name';
+  if (/email|mail|correo/.test(h))                       return 'email';
+  if (/instagram|^ig$/.test(h))                          return 'instagram';
+  if (/tiktok|^tt$/.test(h))                             return 'tiktok';
+  if (/username|usuario|handle|user|account/.test(h))    return 'username';
 
   // Value sniffing on first 30 non-empty cells
   const sample = rows
@@ -49,8 +50,14 @@ function renderColumnSelector(detected) {
   const list = document.getElementById('column-list');
   list.innerHTML = '';
 
+  // Show ALL columns — auto-check the ones we recognise, leave the rest unchecked.
+  // This lets the user manually include any column they want to scan.
+  const autoTypes = new Set(['name', 'email', 'username', 'instagram', 'tiktok']);
+
   detected.forEach(({ column, type }) => {
-    const autoDetected = type !== null;
+    const autoDetected = autoTypes.has(type);
+    // Badge label: name → "name", email → "e-mail", everything else → "username"
+    const displayType = type === 'name' ? 'name' : type === 'email' ? 'e-mail' : type ? 'username' : null;
 
     const label = document.createElement('label');
     label.className = 'col-chip' + (autoDetected ? ' on' : '');
@@ -62,20 +69,17 @@ function renderColumnSelector(detected) {
     cb.checked = autoDetected;
     cb.addEventListener('change', () => label.classList.toggle('on', cb.checked));
 
-    const name = document.createElement('span');
-    name.className   = 'col-name';
-    name.textContent = column;
+    const nameSpan = document.createElement('span');
+    nameSpan.className   = 'col-name';
+    nameSpan.textContent = column;
+
+    const badge = document.createElement('span');
+    badge.className   = `type-badge type-${displayType}`;
+    badge.textContent = displayType;
 
     label.appendChild(cb);
-    label.appendChild(name);
-
-    if (type) {
-      const badge = document.createElement('span');
-      badge.className   = `type-badge type-${type}`;
-      badge.textContent = type;
-      label.appendChild(badge);
-    }
-
+    label.appendChild(nameSpan);
+    label.appendChild(badge);
     list.appendChild(label);
   });
 
@@ -96,6 +100,9 @@ function runFind() {
 
 /** Core duplicate detection: returns { [column]: DupeEntry[] } */
 export function findDuplicates(rows, columns) {
+  console.log('[Scan] Columns to scan:', columns);
+  console.log('[Scan] Total rows:', rows.length);
+  console.log('[Scan] Sample values for first column:', rows.slice(0, 5).map(r => r[columns[0]]));
   const result = {};
 
   for (const col of columns) {

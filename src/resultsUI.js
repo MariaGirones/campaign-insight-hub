@@ -17,7 +17,7 @@ export function renderResults(dupes, headers, rows, selectedCols) {
 
   renderSummary(totalDupeValues, dupeRowSet.size, colsAffected, selectedCols.length);
   renderDetail(dupes, selectedCols);
-  renderTable(headers, rows, dupes, selectedCols, dupeRowSet);
+  document.getElementById('results-table-wrap').innerHTML = '';
 }
 
 /** Summary stat strip at the top */
@@ -83,7 +83,7 @@ function renderDetail(dupes, selectedCols) {
   }
 }
 
-/** Full data table showing only affected rows, highlighted */
+/** Full data table showing only affected rows with fixed columns: #, name, e-mail, username */
 function renderTable(headers, rows, dupes, selectedCols, dupeRowSet) {
   const wrap = document.getElementById('results-table-wrap');
 
@@ -92,10 +92,26 @@ function renderTable(headers, rows, dupes, selectedCols, dupeRowSet) {
     return;
   }
 
-  // Map: column → Set of lowercased duplicate values
+  // Map: column → Set of lowercased duplicate values (for highlight)
   const dupeValSets = {};
   for (const col of selectedCols) {
     dupeValSets[col] = new Set((dupes[col] ?? []).map(e => e.original.toLowerCase()));
+  }
+
+  // Build fixed display columns: name · e-mail · username (instagram/tiktok/username)
+  // Label comes from the type, not the raw PDF column name.
+  const typeLabel = { name: 'name', email: 'e-mail', instagram: 'username', tiktok: 'username', username: 'username' };
+  const seen = new Set();
+  const displayCols = [];
+  for (const h of headers) {
+    const t = detectTypeFromName(h);
+    if (!t || seen.has(t)) continue; // one column per type max (skip duplicates)
+    seen.add(t);
+    displayCols.push({ label: typeLabel[t], col: h });
+  }
+  // Fall back to selected columns if nothing detected
+  if (!displayCols.length) {
+    selectedCols.forEach(c => displayCols.push({ label: c, col: c }));
   }
 
   const displayRows = [...dupeRowSet].sort((a, b) => a - b);
@@ -112,15 +128,15 @@ function renderTable(headers, rows, dupes, selectedCols, dupeRowSet) {
         <thead>
           <tr>
             <th>#</th>
-            ${headers.map(h => `<th>${esc(h)}</th>`).join('')}
+            ${displayCols.map(c => `<th>${esc(c.label)}</th>`).join('')}
           </tr>
         </thead>
         <tbody>
           ${shown.map(i => {
-            const row = rows[i];
-            const cells = headers.map(h => {
-              const val    = row[h] !== undefined ? String(row[h]) : '';
-              const isDupe = selectedCols.includes(h) && dupeValSets[h]?.has(val.trim().toLowerCase());
+            const row   = rows[i];
+            const cells = displayCols.map(({ col }) => {
+              const val    = row[col] !== undefined ? String(row[col]) : '';
+              const isDupe = dupeValSets[col]?.has(val.trim().toLowerCase());
               return `<td class="${isDupe ? 'cell-dupe' : ''}">${esc(val)}</td>`;
             }).join('');
             return `<tr class="row-dupe"><td class="row-num">${i + 2}</td>${cells}</tr>`;
@@ -146,9 +162,10 @@ function buildDupeRowSet(dupes, rows, selectedCols) {
 /** Re-derive semantic type from column name (mirrors duplicateFinder logic) */
 function detectTypeFromName(header) {
   const h = header.toLowerCase().replace(/[\s_\-]/g, '');
-  if (/email|e-?mail/.test(h))                           return 'email';
-  if (/instagram|^ig$|ighandle|igusername/.test(h))      return 'instagram';
-  if (/tiktok|^tt$|tthandle|ttusername/.test(h))         return 'tiktok';
-  if (/username|handle|^user$|account|creator/.test(h))  return 'username';
+  if (/name|nombre|creator|influencer/.test(h))           return 'name';
+  if (/email|mail|correo/.test(h))                       return 'email';
+  if (/instagram|^ig$/.test(h))                          return 'instagram';
+  if (/tiktok|^tt$/.test(h))                             return 'tiktok';
+  if (/username|usuario|handle|user|account/.test(h))    return 'username';
   return null;
 }
