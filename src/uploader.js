@@ -1,164 +1,77 @@
-/**
- * uploader.js
- * Handles all UI interactions for the file upload section.
- * Accepts CSV and PDF files. Emits 'csv:loaded' on the document
- * when parsing succeeds (same payload shape regardless of file type).
- */
-
 import { parseCSV, readFileAsText } from './csvParser.js';
 import { parsePDF }                 from './pdfParser.js';
-
-const ACCEPTED_EXTS = ['.csv', '.pdf'];
-
-/** Strip extension and clean up filename to use as campaign name */
-function filenameToCampaign(filename) {
-  return filename
-    .replace(/\.[^.]+$/, '')          // remove extension
-    .replace(/[_\-]+/g, ' ')          // underscores/dashes → spaces
-    .replace(/\s+/g, ' ')             // collapse whitespace
-    .trim();
-}
-
-function isAccepted(file) {
-  const name = file.name.toLowerCase();
-  return ACCEPTED_EXTS.some(ext => name.endsWith(ext));
-}
-
-function fileType(file) {
-  if (file.name.toLowerCase().endsWith('.pdf')) return 'pdf';
-  return 'csv';
-}
+import { initColumns }              from './duplicateFinder.js';
 
 export function initUploader() {
-  const uploadArea       = document.getElementById('uploadArea');
-  const fileInput        = document.getElementById('fileInput');
-  const browseBtn        = document.getElementById('browseBtn');
-  const uploadStatus     = document.getElementById('uploadStatus');
-  const statusFilename   = document.getElementById('statusFilename');
-  const statusInfo       = document.getElementById('statusInfo');
-  const previewContainer = document.getElementById('previewContainer');
-  const previewCount     = document.getElementById('previewCount');
-  const previewTable     = document.getElementById('previewTable');
-  const clearBtn         = document.getElementById('clearBtn');
+  const dropZone   = document.getElementById('drop-zone');
+  const fileInput  = document.getElementById('file-input');
+  const statusEl   = document.getElementById('upload-status');
+  const resetBtn   = document.getElementById('reset-btn');
 
-  // ── Open file picker ───────────────────────────────────────
-  browseBtn.addEventListener('click', () => fileInput.click());
-  uploadArea.addEventListener('click', e => {
-    if (e.target !== browseBtn) fileInput.click();
-  });
+  // Click anywhere on drop zone to open file picker
+  dropZone.addEventListener('click', () => fileInput.click());
 
-  // ── File input change ──────────────────────────────────────
   fileInput.addEventListener('change', () => {
-    if (fileInput.files.length) handleFile(fileInput.files[0]);
+    if (fileInput.files[0]) handleFile(fileInput.files[0]);
   });
 
-  // ── Drag & drop ────────────────────────────────────────────
-  uploadArea.addEventListener('dragover', e => {
+  dropZone.addEventListener('dragover', e => {
     e.preventDefault();
-    uploadArea.classList.add('drag-over');
+    dropZone.classList.add('drag-over');
   });
-  uploadArea.addEventListener('dragleave', () => {
-    uploadArea.classList.remove('drag-over');
-  });
-  uploadArea.addEventListener('drop', e => {
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
     e.preventDefault();
-    uploadArea.classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
+    dropZone.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
   });
 
-  // ── Clear button ───────────────────────────────────────────
-  clearBtn.addEventListener('click', resetUI);
+  resetBtn.addEventListener('click', reset);
 
-  // ── Core handler ──────────────────────────────────────────
   async function handleFile(file) {
-    if (!isAccepted(file)) {
-      showStatus(file.name, 'Only CSV and PDF files are supported.', true);
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (ext !== 'csv' && ext !== 'pdf') {
+      showStatus('Only CSV and PDF files are supported.', 'err');
       return;
     }
 
-    const type = fileType(file);
-    showStatus(file.name, `Reading ${type.toUpperCase()} file…`);
+    showStatus('Parsing file\u2026', 'loading');
 
     try {
       let result;
-
-      if (type === 'pdf') {
-        showStatus(file.name, 'Loading PDF parser…');
+      if (ext === 'pdf') {
         result = await parsePDF(file);
       } else {
         const text = await readFileAsText(file);
         result = parseCSV(text);
       }
 
+      if (!result.headers.length || !result.rows.length) {
+        showStatus('No data found in this file.', 'err');
+        return;
+      }
+
       showStatus(
-        file.name,
-        `${result.rows.length} rows · ${result.headers.length} columns detected`
+        `\u2713 ${file.name} \u2014 ${result.rows.length} rows, ${result.headers.length} columns`,
+        'ok'
       );
+      initColumns(result.headers, result.rows);
 
-      renderPreview(result.headers, result.rows);
-
-      const campaignName = filenameToCampaign(file.name);
-      document.dispatchEvent(
-        new CustomEvent('csv:loaded', { detail: { ...result, campaignName } })
-      );
     } catch (err) {
-      showStatus(file.name, err.message, true);
+      showStatus('Failed to parse file: ' + err.message, 'err');
     }
   }
 
-  // ── Helpers ────────────────────────────────────────────────
-  function showStatus(filename, info, isError = false) {
-    statusFilename.textContent = filename;
-    statusInfo.textContent     = info;
-    uploadStatus.hidden        = false;
-    uploadStatus.querySelector('.status-card').classList.toggle('error', isError);
+  function showStatus(msg, type) {
+    statusEl.textContent = msg;
+    statusEl.className   = 'upload-status ' + type;
   }
 
-  function renderPreview(headers, rows) {
-    const thead   = document.createElement('thead');
-    const headRow = document.createElement('tr');
-    headers.forEach(h => {
-      const th = document.createElement('th');
-      th.textContent = h;
-      headRow.appendChild(th);
-    });
-    thead.appendChild(headRow);
-
-    const tbody = document.createElement('tbody');
-    rows.forEach(row => {
-      const tr = document.createElement('tr');
-      headers.forEach(h => {
-        const td = document.createElement('td');
-        td.textContent = row[h] ?? '';
-        tr.appendChild(td);
-      });
-      tbody.appendChild(tr);
-    });
-
-    previewTable.innerHTML = '';
-    previewTable.appendChild(thead);
-    previewTable.appendChild(tbody);
-    previewCount.textContent = `(${rows.length} rows · ${headers.length} columns)`;
-    previewContainer.hidden = false;
-  }
-
-  function resetUI() {
-    fileInput.value         = '';
-    uploadStatus.hidden     = true;
-    previewContainer.hidden = true;
-    previewTable.innerHTML  = '';
-    uploadArea.classList.remove('drag-over');
-
-    const normContainer     = document.getElementById('normContainer');
-    const normTable         = document.getElementById('normTable');
-    const normSummary       = document.getElementById('normSummary');
-    const insightsContainer = document.getElementById('insightsContainer');
-    if (normContainer)     normContainer.hidden     = true;
-    if (normTable)         normTable.innerHTML      = '';
-    if (normSummary)       normSummary.innerHTML    = '';
-    if (insightsContainer) insightsContainer.hidden = true;
-
-    document.dispatchEvent(new CustomEvent('ui:cleared'));
+  function reset() {
+    fileInput.value    = '';
+    statusEl.className = 'upload-status hidden';
+    statusEl.textContent = '';
+    document.getElementById('columns-section').classList.add('hidden');
+    document.getElementById('results-section').classList.add('hidden');
   }
 }

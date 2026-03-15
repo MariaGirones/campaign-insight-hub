@@ -1,165 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Campaign Insight Hub</title>
-  <link rel="stylesheet" href="styles/main.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dedupe &mdash; Duplicate Record Finder</title>
+  <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
+
   <header class="header">
     <div class="header-inner">
-      <h1 class="logo">Campaign Insight Hub</h1>
-      <nav class="nav">
-        <a href="#upload" class="nav-link active">Upload</a>
-        <a href="#dashboard" class="nav-link">Dashboard</a>
-        <a href="#search" class="nav-link">Search</a>
-      </nav>
+      <div class="brand">
+        <span class="brand-name">dedupe</span>
+        <span class="brand-sep"></span>
+        <span class="brand-tag">Duplicate Record Finder</span>
+      </div>
     </div>
   </header>
 
   <main class="main">
 
-    <!-- Feature 1: CSV Upload -->
-    <section id="upload" class="section">
-      <h2 class="section-title">Upload Analytics File</h2>
-      <p class="section-desc">Upload a CSV or PDF exported from Instagram, TikTok, or any analytics tool. Columns are detected automatically.</p>
-
-      <!-- Goals -->
-      <div class="goals-panel">
-        <label class="goals-label" for="goalsInput">What do you want to find out about this campaign?</label>
-        <textarea
-          id="goalsInput"
-          class="goals-textarea"
-          placeholder="e.g. Which creator had the best engagement rate? Who drove the most views? Was the overall performance above average?"
-          rows="3"
-        ></textarea>
-      </div>
-
-      <div class="upload-area" id="uploadArea">
-        <div class="upload-icon">&#8679;</div>
-        <p class="upload-label">Drag &amp; drop a CSV or PDF file here, or click to browse</p>
-        <input type="file" id="fileInput" accept=".csv,.pdf" hidden />
-        <button class="btn btn-primary" id="browseBtn">Browse File</button>
-      </div>
-
-      <div class="upload-status" id="uploadStatus" hidden>
-        <div class="status-card">
-          <p class="status-filename" id="statusFilename"></p>
-          <p class="status-info" id="statusInfo"></p>
+    <!-- Step 1: Upload -->
+    <section id="upload-section" class="card">
+      <div id="drop-zone" class="drop-zone">
+        <div class="drop-inner">
+          <svg class="drop-icon" width="32" height="32" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <p class="drop-title">Drop your file here</p>
+          <p class="drop-hint">CSV or PDF &mdash; <label class="link" for="file-input">browse</label></p>
+          <input type="file" id="file-input" accept=".csv,.pdf" hidden>
         </div>
       </div>
+      <div id="upload-status" class="upload-status hidden"></div>
+    </section>
 
-      <div class="preview-container" id="previewContainer" hidden>
-        <h3 class="preview-title">Raw Preview <span id="previewCount"></span></h3>
-        <div class="table-wrapper">
-          <table class="data-table" id="previewTable"></table>
-        </div>
-        <button class="btn btn-secondary" id="clearBtn">Clear</button>
+    <!-- Step 2: Column Selector -->
+    <section id="columns-section" class="card hidden">
+      <div class="card-header">
+        <h2 class="card-title">Select columns to scan</h2>
+        <p class="card-sub">Auto-detected fields are pre-selected. Toggle any column to include or exclude it.</p>
       </div>
-
-      <!-- AI / Rule-based Insights -->
-      <div class="insights-container" id="insightsContainer" hidden>
-        <h3 class="preview-title">Campaign Insights <span id="insightsSource"></span></h3>
-        <div class="insights-loading" id="insightsLoading" hidden>Analyzing…</div>
-        <div class="insights-content" id="insightsContent"></div>
-      </div>
-
-      <!-- Feature 2: Normalization result -->
-      <div class="norm-container" id="normContainer" hidden>
-        <h3 class="preview-title">Normalized Data <span id="normCount"></span></h3>
-        <div class="norm-summary" id="normSummary"></div>
-        <div class="table-wrapper">
-          <table class="data-table" id="normTable"></table>
-        </div>
+      <div id="column-list" class="column-list"></div>
+      <div class="row-actions">
+        <button id="find-btn" class="btn btn-primary">Find Duplicates</button>
+        <button id="reset-btn" class="btn btn-ghost">Start over</button>
       </div>
     </section>
 
-    <!-- Feature 3: Creator Matching -->
-    <section id="matchSection" class="section" hidden>
-      <h2 class="section-title">Matched Creators</h2>
-      <p class="section-desc" id="matchCount"></p>
-      <div class="creator-grid" id="creatorGrid"></div>
-    </section>
-
-    <!-- Feature 5: Creator Search -->
-    <section id="search" class="section">
-      <h2 class="section-title">Search</h2>
-      <p class="section-desc">Search by Instagram username, post URL, post ID, or campaign name.</p>
-
-      <div class="search-bar">
-        <input
-          id="searchInput"
-          class="search-input"
-          type="text"
-          placeholder="@username · instagram.com/p/ABC · post_id · Campaign name"
-          autocomplete="off"
-          spellcheck="false"
-        />
-        <button class="btn btn-secondary search-clear" id="searchClearBtn">&#x2715;</button>
-      </div>
-
-      <div id="searchResult" class="search-result" hidden></div>
-    </section>
-
-    <!-- Feature 6: Missing Data Detection -->
-    <section id="missingSection" class="section">
-      <h2 class="section-title">Missing Data Detection</h2>
-      <p class="section-desc">See which creators in each campaign have not submitted analytics yet.</p>
-
-      <!-- Auto reports from store -->
-      <div id="missingReports"></div>
-
-      <!-- Roster upload -->
-      <div class="roster-upload-panel">
-        <h3 class="roster-title">Check Against a Roster</h3>
-        <p class="section-desc">Upload a CSV with a list of expected creators to cross-reference against a specific campaign.</p>
-        <div class="roster-controls">
-          <select id="rosterCampaignSelect" class="roster-select">
-            <option value="">— Select campaign —</option>
-          </select>
-          <label class="btn btn-secondary roster-upload-btn">
-            Upload Roster CSV
-            <input type="file" id="rosterFileInput" accept=".csv" hidden />
-          </label>
-        </div>
-        <p id="rosterStatus" class="roster-status" hidden></p>
-        <div id="rosterResult" hidden></div>
-      </div>
-    </section>
-
-    <!-- Feature 4: Data Storage -->
-    <section id="storeSection" class="section">
-      <h2 class="section-title">Stored Data</h2>
-      <p class="section-desc">Data is saved in your browser and persists across sessions.</p>
-
-      <div class="store-stats" id="storeStats">
-        <div class="store-stat">
-          <span class="store-stat-value" id="statCreators">0</span>
-          <span class="store-stat-label">Creators</span>
-        </div>
-        <div class="store-stat">
-          <span class="store-stat-value" id="statPosts">0</span>
-          <span class="store-stat-label">Posts</span>
-        </div>
-        <div class="store-stat">
-          <span class="store-stat-value" id="statCampaigns">0</span>
-          <span class="store-stat-label">Campaigns</span>
-        </div>
-        <div class="store-stat">
-          <span class="store-stat-value" id="statUploads">0</span>
-          <span class="store-stat-label">Uploads</span>
-        </div>
-      </div>
-
-      <p class="store-meta" id="storeMeta"></p>
-
-      <div class="store-actions">
-        <button class="btn btn-danger" id="clearStoreBtn">Clear All Stored Data</button>
-      </div>
-
-      <!-- Stored campaigns list -->
-      <div id="campaignList" class="campaign-list"></div>
+    <!-- Step 3: Results -->
+    <section id="results-section" class="hidden">
+      <div id="results-summary"></div>
+      <div id="results-detail"></div>
+      <div id="results-table-wrap"></div>
     </section>
 
   </main>
